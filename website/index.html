@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Walgent — Decentralized storage for AI agents</title>
+  <meta name="description" content="Let AI agents store outputs on Walrus decentralized storage via Skills. Generate images, text, JSON and auto-upload to Walrus for permanent, shareable URLs.">
+  <meta property="og:title" content="Walgent">
+  <meta property="og:description" content="Decentralized storage for AI agents.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="../assets/og-image.svg">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --sky: #0EA5E9;
+      --indigo: #6366F1;
+      --amber: #FCD34D;
+      --slate-900: #0F172A;
+      --slate-800: #1E293B;
+      --slate-700: #334155;
+      --slate-500: #64748B;
+      --slate-400: #94A3B8;
+      --slate-300: #CBD5E1;
+      --slate-200: #E2E8F0;
+      --slate-100: #F1F5F9;
+      --slate-50: #F8FAFC;
+      --white: #FFFFFF;
+      --grad: linear-gradient(135deg, #0EA5E9 0%, #6366F1 100%);
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--slate-900);
+      line-height: 1.6;
+      background: var(--white);
+      overflow-x: hidden;
+    }
+    .container { max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+
+    /* ===== Nav ===== */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--slate-200);
+    }
+    .nav-inner {
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .nav-brand img { width: 32px; height: 32px; }
+    .nav-brand span { font-size: 20px; font-weight: 700; color: var(--slate-900); }
+    .nav-links { display: flex; align-items: center; gap: 32px; }
+    .nav-links a {
+      text-decoration: none; color: var(--slate-700);
+      font-size: 14px; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--slate-900); }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 20px; border-radius: 8px;
+      font-size: 14px; font-weight: 600; text-decoration: none;
+      transition: all 0.2s; cursor: pointer; border: none;
+    }
+    .btn-primary { background: var(--grad); color: var(--white); }
+    .btn-primary:hover { opacity: 0.92; transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
+    .btn-secondary {
+      background: var(--white); color: var(--slate-900);
+      border: 1px solid var(--slate-200);
+    }
+    .btn-secondary:hover { border-color: var(--slate-300); background: var(--slate-50); }
+
+    /* ===== Hero ===== */
+    .hero {
+      padding: 140px 0 80px;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(14,165,233,0.06) 0%, transparent 70%);
+      text-align: center;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: 999px;
+      background: var(--slate-100); color: var(--slate-700);
+      font-size: 13px; font-weight: 500; margin-bottom: 24px;
+    }
+    .hero-badge .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--sky); animation: pulse 2s infinite;
+    }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .hero h1 {
+      font-size: clamp(40px, 6vw, 64px);
+      font-weight: 800; line-height: 1.1; letter-spacing: -0.02em;
+      margin-bottom: 20px; max-width: 900px; margin-left: auto; margin-right: auto;
+    }
+    .hero h1 .grad-text {
+      background: var(--grad); -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero p {
+      font-size: clamp(16px, 2vw, 20px); color: var(--slate-500);
+      max-width: 620px; margin: 0 auto 36px; line-height: 1.6;
+    }
+    .hero-cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .hero-demo {
+      margin-top: 64px; max-width: 880px; margin-left: auto; margin-right: auto;
+      border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--slate-200);
+      box-shadow: 0 24px 60px rgba(15,23,42,0.08);
+    }
+    .demo-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px; background: var(--slate-100);
+      border-bottom: 1px solid var(--slate-200);
+    }
+    .demo-bar .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .demo-bar .d1 { background: #FF5F57; } .demo-bar .d2 { background: #FEBC2E; } .demo-bar .d3 { background: #28C840; }
+    .demo-bar .name { margin-left: 8px; font-size: 13px; color: var(--slate-500); }
+    .demo-code {
+      padding: 24px; background: var(--slate-900); color: var(--slate-300);
+      font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7;
+      overflow-x: auto; text-align: left;
+    }
+    .demo-code .kw { color: #C084FC; }
+    .demo-code .str { color: #FCD34D; }
+    .demo-code .fn { color: #60A5FA; }
+    .demo-code .com { color: #64748B; }
+    .demo-code .var { color: #67E8F9; }
+
+    /* ===== Section ===== */
+    section { padding: 80px 0; }
+    .section-title { text-align: center; margin-bottom: 56px; }
+    .section-title h2 {
+      font-size: clamp(28px, 4vw, 40px); font-weight: 700;
+      letter-spacing: -0.01em; margin-bottom: 12px;
+    }
+    .section-title p { color: var(--slate-500); font-size: 17px; max-width: 580px; margin: 0 auto; }
+
+    /* ===== Features ===== */
+    .features { background: var(--slate-50); }
+    .feature-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .feature-card {
+      background: var(--white); border-radius: 12px; padding: 28px;
+      border: 1px solid var(--slate-200);
+      transition: all 0.2s;
+    }
+    .feature-card:hover { border-color: var(--sky); transform: translateY(-4px); box-shadow: 0 12px 32px rgba(14,165,233,0.08); }
+    .feature-icon {
+      width: 44px; height: 44px; border-radius: 10px;
+      background: linear-gradient(135deg, rgba(14,165,233,0.1), rgba(99,102,241,0.1));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 16px;
+    }
+    .feature-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .feature-card p { color: var(--slate-500); font-size: 14px; line-height: 1.6; }
+
+    /* ===== How it works ===== */
+    .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; position: relative; }
+    .steps::before {
+      content: ''; position: absolute; top: 28px; left: 12.5%; right: 12.5%;
+      height: 2px; background: var(--slate-200); z-index: 0;
+    }
+    .step { text-align: center; position: relative; z-index: 1; }
+    .step-num {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: var(--grad); color: var(--white);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 700; margin: 0 auto 16px;
+      border: 4px solid var(--white);
+    }
+    .step h3 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+    .step p { color: var(--slate-500); font-size: 13px; }
+
+    /* ===== Code tabs ===== */
+    .code-section { background: var(--slate-900); color: var(--white); }
+    .code-section .section-title h2 { color: var(--white); }
+    .code-section .section-title p { color: var(--slate-400); }
+    .code-tabs {
+      max-width: 820px; margin: 0 auto; border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--slate-700);
+    }
+    .tab-headers { display: flex; background: var(--slate-800); border-bottom: 1px solid var(--slate-700); }
+    .tab-header {
+      padding: 12px 20px; font-size: 13px; font-weight: 500;
+      color: var(--slate-400); cursor: pointer; transition: all 0.2s;
+      border-bottom: 2px solid transparent;
+    }
+    .tab-header.active { color: var(--white); border-bottom-color: var(--sky); }
+    .tab-content { display: none; padding: 24px; background: var(--slate-900); font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.7; }
+    .tab-content.active { display: block; }
+    .tab-content .kw { color: #C084FC; }
+    .tab-content .str { color: #FCD34D; }
+    .tab-content .fn { color: #60A5FA; }
+    .tab-content .com { color: #64748B; }
+    .tab-content .var { color: #67E8F9; }
+
+    /* ===== CTA ===== */
+    .cta {
+      text-align: center; padding: 100px 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 50%, rgba(99,102,241,0.06) 0%, transparent 70%);
+    }
+    .cta h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 700; margin-bottom: 12px; }
+    .cta p { color: var(--slate-500); font-size: 17px; margin-bottom: 32px; }
+
+    /* ===== Footer ===== */
+    footer { background: var(--slate-900); color: var(--slate-400); padding: 48px 0; }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 24px; }
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+    .footer-brand img { width: 28px; height: 28px; }
+    .footer-brand span { font-size: 17px; font-weight: 600; color: var(--white); }
+    .footer-links { display: flex; gap: 24px; }
+    .footer-links a { color: var(--slate-400); text-decoration: none; font-size: 14px; transition: color 0.2s; }
+    .footer-links a:hover { color: var(--white); }
+    .footer-copy { font-size: 13px; color: var(--slate-500); }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .feature-grid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: repeat(2, 1fr); gap: 40px 16px; }
+      .steps::before { display: none; }
+      .hero-demo { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Navigation ===== -->
+  <nav>
+    <div class="container nav-inner">
+      <a href="#" class="nav-brand">
+        <img src="../assets/icon.svg" alt="Walgent">
+        <span>Walgent</span>
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#how">How it works</a>
+        <a href="#code">Examples</a>
+        <a href="https://docs.wal.app" target="_blank">Walrus Docs ↗</a>
+      </div>
+      <a href="#code" class="btn btn-primary">Get Started</a>
+    </div>
+  </nav>
+
+  <!-- ===== Hero ===== -->
+  <div class="hero">
+    <div class="container">
+      <div class="hero-badge">
+        <span class="dot"></span>
+        Built on Sui · Powered by Walrus
+      </div>
+      <h1>
+        <span class="grad-text">Decentralized storage</span><br>
+        for AI agents.
+      </h1>
+      <p>
+        Let your AI agents store outputs on Walrus decentralized storage via Skills.
+        Generate images, text, or JSON, auto-upload to Walrus, and get permanent shareable URLs.
+      </p>
+      <div class="hero-cta">
+        <a href="#code" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+          View Examples
+        </a>
+        <a href="https://github.com" target="_blank" class="btn btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.09 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .11-.78.42-1.31.76-1.61-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.39 1.24-3.23-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.92 1.24 3.23 0 4.62-2.81 5.64-5.49 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12.01 12.01 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+
+      <!-- Demo code -->
+      <div class="hero-demo">
+        <div class="demo-bar">
+          <span class="dot d1"></span><span class="dot d2"></span><span class="dot d3"></span>
+          <span class="name">image-agent.ts</span>
+        </div>
+        <pre class="demo-code"><span class="kw">import</span> { WalrusAgent, createSkill } <span class="kw">from</span> <span class="str">"walgent"</span>;
+
+<span class="com">// 1. Define an "image generation" Skill</span>
+<span class="kw">const</span> <span class="var">imageSkill</span> = <span class="fn">createSkill</span>(
+  { name: <span class="str">"image-gen"</span>, title: <span class="str">"Image Generator"</span>, version: <span class="str">"0.1.0"</span> },
+  <span class="kw">async</span> (ctx) => ({
+    ok: <span class="kw">true</span>,
+    message: <span class="str">`Generated image for "${ctx.input}"`</span>,
+    outputs: [{ filename: <span class="str">"cat.svg"</span>, contentType: <span class="str">"image/svg+xml"</span>, data }],
+  }),
+);
+
+<span class="com">// 2. Run — the agent auto-uploads the image to Walrus</span>
+<span class="kw">const</span> <span class="var">agent</span> = <span class="kw">new</span> <span class="fn">WalrusAgent</span>({ walrus: { network: <span class="str">"testnet"</span> } });
+agent.<span class="fn">register</span>(imageSkill);
+
+<span class="kw">const</span> <span class="var">result</span> = <span class="kw">await</span> agent.<span class="fn">run</span>(<span class="str">"image-gen"</span>, { input: <span class="str">"a cat on blockchain"</span> });
+console.<span class="fn">log</span>(result.stored[<span class="str">0</span>].url);
+<span class="com">// → https://aggregator.walrus-testnet.../v1/blobs/CW8p1U4...</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Features ===== -->
+  <section class="features" id="features">
+    <div class="container">
+      <div class="section-title">
+        <h2>Why Walgent</h2>
+        <p>A lightweight TypeScript toolkit that connects AI agents to Walrus storage</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🧩</div>
+          <h3>Skill Abstraction</h3>
+          <p>Define agent capabilities with a unified interface, fully decoupling business logic from storage. One createSkill does it all.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🗃️</div>
+          <h3>Auto Upload</h3>
+          <p>After an agent runs, outputs are automatically stored on Walrus — zero boilerplate. Returns decentralized access URLs.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🌐</div>
+          <h3>Multi-Network</h3>
+          <p>Supports mainnet / testnet / devnet with custom endpoints. Full Mainnet private key management built in.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔁</div>
+          <h3>Retry & Timeout</h3>
+          <p>Built-in exponential backoff retries and request timeout control. Stable uploads even under network fluctuations.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🛡️</div>
+          <h3>Type Safe</h3>
+          <p>Complete TypeScript type definitions. IDE autocompletion and compile-time error checking out of the box.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🧪</div>
+          <h3>Testable</h3>
+          <p>Supports custom fetch mocking for easy unit testing. 25 built-in tests all passing.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== How it works ===== -->
+  <section id="how">
+    <div class="container">
+      <div class="section-title">
+        <h2>How it works</h2>
+        <p>Four steps to decentralized storage for agent outputs</p>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <h3>Define Skill</h3>
+          <p>Use createSkill to define agent capabilities (image generation, text processing, etc.)</p>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <h3>Run Skill</h3>
+          <p>WalrusAgent invokes the Skill and produces outputs</p>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <h3>Auto Upload</h3>
+          <p>Each output is automatically uploaded to the Walrus Publisher</p>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <h3>Get URL</h3>
+          <p>Returns blobId and decentralized access URL, readable by anyone</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Code Examples ===== -->
+  <section class="code-section" id="code">
+    <div class="container">
+      <div class="section-title">
+        <h2>Code Examples</h2>
+        <p>Connect your agent to Walrus in minutes</p>
+      </div>
+      <div class="code-tabs">
+        <div class="tab-headers">
+          <div class="tab-header active" onclick="switchTab(0)">Install</div>
+          <div class="tab-header" onclick="switchTab(1)">Image Agent</div>
+          <div class="tab-header" onclick="switchTab(2)">Mainnet Keys</div>
+        </div>
+
+        <div class="tab-content active" id="tab-0">
+<span class="com"># Install with npm</span>
+npm install walgent
+
+<span class="com"># or with yarn</span>
+yarn add walgent
+
+<span class="com"># or with pnpm</span>
+pnpm add walgent
+
+<span class="com"># Local development</span>
+git clone https://github.com/yourname/walgent
+cd walgent
+npm install
+npm test</div>
+
+        <div class="tab-content" id="tab-1">
+<span class="kw">import</span> { WalrusAgent, createSkill, toBytes } <span class="kw">from</span> <span class="str">"walgent"</span>;
+
+<span class="kw">const</span> <span class="var">skill</span> = <span class="fn">createSkill</span>(
+  {
+    name: <span class="str">"image-gen"</span>,
+    title: <span class="str">"Image Generator"</span>,
+    description: <span class="str">"Generate an image from a prompt"</span>,
+    version: <span class="str">"0.1.0"</span>,
+  },
+  <span class="kw">async</span> (ctx) => {
+    <span class="kw">const</span> <span class="var">imageBytes</span> = <span class="kw">await</span> <span class="fn">generateImage</span>(ctx.input);
+
+    <span class="kw">return</span> {
+      ok: <span class="kw">true</span>,
+      message: <span class="str">`Generated image for "${ctx.input}"`</span>,
+      outputs: [
+        {
+          filename: <span class="str">`image-${Date.now()}.png`</span>,
+          contentType: <span class="str">"image/png"</span>,
+          data: imageBytes,
+        },
+      ],
+    };
+  },
+);
+
+<span class="kw">const</span> <span class="var">agent</span> = <span class="kw">new</span> <span class="fn">WalrusAgent</span>({
+  walrus: { network: <span class="str">"testnet"</span> },
+  uploadDefaults: { epochs: <span class="str">5</span> },
+});
+agent.<span class="fn">register</span>(skill);
+
+<span class="kw">const</span> <span class="var">result</span> = <span class="kw">await</span> agent.<span class="fn">run</span>(<span class="str">"image-gen"</span>, {
+  input: <span class="str">"a cat sitting on a blockchain"</span>,
+});
+
+console.<span class="fn">log</span>(result.stored[<span class="str">0</span>].url);
+console.<span class="fn">log</span>(result.stored[<span class="str">0</span>].blobId);</div>
+
+        <div class="tab-content" id="tab-2">
+<span class="com">// Mainnet requires WAL tokens to pay for storage</span>
+<span class="com">// Three strategies: self-hosted Publisher / Upload Relay / on-chain signing</span>
+
+<span class="kw">import</span> { WalrusAgent, createWalletFromEnv } <span class="kw">from</span> <span class="str">"walgent"</span>;
+
+<span class="kw">const</span> <span class="var">agent</span> = <span class="kw">new</span> <span class="fn">WalrusAgent</span>({
+  walrus: {
+    network: <span class="str">"mainnet"</span>,
+    publisherUrl: process.env.WALRUS_PUBLISHER_URL,
+  },
+  <span class="com">// Wallet config: load private key from env</span>
+  wallet: {
+    source: <span class="str">"env"</span>,
+    envVar: <span class="str">"WALRUS_SUI_PRIVATE_KEY"</span>,
+  },
+  <span class="com">// Check SUI balance before upload</span>
+  checkBalanceBeforeUpload: <span class="kw">true</span>,
+  uploadDefaults: { epochs: <span class="str">10</span> },
+});
+
+<span class="com">// Query wallet balance</span>
+<span class="kw">const</span> <span class="var">balance</span> = <span class="kw">await</span> agent.wallet.<span class="fn">getBalance</span>();
+console.<span class="fn">log</span>(<span class="str">`Balance: ${Number(balance) / 1e9} SUI`</span>);</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta">
+    <div class="container">
+      <h2>Start building your agent</h2>
+      <p>Give your AI outputs permanent, decentralized storage</p>
+      <div class="hero-cta">
+        <a href="https://github.com" target="_blank" class="btn btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.21.09 1.84 1.24 1.84 1.24 1.07 1.84 2.81 1.31 3.5 1 .11-.78.42-1.31.76-1.61-2.67-.3-5.47-1.34-5.47-5.95 0-1.31.47-2.39 1.24-3.23-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.92 1.24 3.23 0 4.62-2.81 5.64-5.49 5.94.43.37.81 1.1.81 2.22v3.29c0 .32.22.7.83.58A12.01 12.01 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          Star on GitHub
+        </a>
+        <a href="https://docs.wal.app" target="_blank" class="btn btn-secondary">Walrus Docs</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer>
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <img src="../assets/icon.svg" alt="Walgent">
+        <span>Walgent</span>
+      </div>
+      <div class="footer-links">
+        <a href="#features">Features</a>
+        <a href="#code">Docs</a>
+        <a href="https://github.com" target="_blank">GitHub</a>
+        <a href="https://docs.wal.app" target="_blank">Walrus</a>
+        <a href="https://sui.io" target="_blank">Sui</a>
+      </div>
+      <div class="footer-copy">MIT License · Built with ❤️ on Sui</div>
+    </div>
+  </footer>
+
+  <script>
+    // Tab switching
+    function switchTab(idx) {
+      document.querySelectorAll('.tab-header').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+      });
+      document.querySelectorAll('.tab-content').forEach((el, i) => {
+        el.classList.toggle('active', i === idx);
+      });
+    }
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) {
+          e.preventDefault();
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>
